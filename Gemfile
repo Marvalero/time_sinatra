@@ -2,6 +2,7 @@ source 'https://rubygems.org'
 
 gem "rack"
 gem "sinatra"
+gem "puma"
 
 group :test do
   gem "pry"

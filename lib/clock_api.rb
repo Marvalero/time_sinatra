@@ -1,6 +1,11 @@
 require 'json'
 
 class ClockApi < Sinatra::Base
+  def initialize(controller = ClockController.new)
+    @clock_controller = controller
+    super()
+  end
+
   before do
     content_type :txt
   end
@@ -15,6 +20,9 @@ class ClockApi < Sinatra::Base
   end
 
   post '/clocks/:name' do
-    JSON.generate('expense_id' => 42)
+    params = JSON.parse(request.body.read)
+    result = @clock_controller.record(params)
+    if !result.success? then status 422 and return JSON.generate('error' => result.error_message) end
+    JSON.generate('expense_id' => result.id)
   end
 end
