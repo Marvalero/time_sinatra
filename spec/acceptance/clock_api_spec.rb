@@ -39,7 +39,7 @@ RSpec.describe ClockApi, type: :controller do
   describe "Post /clocks" do
     context "with time" do
       it "returns 200" do
-        post_clock("peak", {time: "peak", count: 2})
+        post_clock("peak", {"time" => "peak", 'count' => 2})
       end
     end
   end

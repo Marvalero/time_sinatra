@@ -1,7 +1,8 @@
 require 'json'
+require_relative './clock_controller'
 
 class ClockApi < Sinatra::Base
-  def initialize(controller = ClockController.new)
+  def initialize(controller = Clock::ClockController.new)
     @clock_controller = controller
     super()
   end
@@ -15,8 +16,8 @@ class ClockApi < Sinatra::Base
   end
 
   get '/clocks/:name' do
-    clock_name = params[:name].to_sym
-    "#{Time.now.to_i}"
+    result = @clock_controller.find(name: params[:name])
+    JSON.generate('time' => result.object.time)
   end
 
   post '/clocks/:name' do
