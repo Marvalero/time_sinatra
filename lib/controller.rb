@@ -1,13 +1,12 @@
 module Clock
-  RecordResult = Struct.new(:success?, :id, :error_message, :object)
 
   class Controller
     def initialize(collection, factory)
       @factory = factory
       @collection = collection
     end
-    def record(params)
-      @collection.create(params)
+    def record(clock)
+      @collection.create(clock)
     end
     def find(name:)
       @collection.find_by_name(name).tap do |result|

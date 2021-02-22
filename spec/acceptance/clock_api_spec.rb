@@ -3,6 +3,7 @@ require 'spec_helper'
 require 'json'
 
 RSpec.describe Clock::Api, type: :controller do
+  let(:database) { Clock::Database }
   include Rack::Test::Methods
   def app
     Clock::Box.new.api
@@ -11,7 +12,7 @@ RSpec.describe Clock::Api, type: :controller do
   def post_clock(name, params)
     post "/clocks/#{name}", JSON.generate(params)
     expect(last_response.status).to eq(200)
-    expect(JSON.parse(last_response.body)).to include('expense_id' => a_kind_of(Integer))
+    expect(JSON.parse(last_response.body)).to include('id' => a_kind_of(Integer))
   end
 
   describe "Get /clocks" do
@@ -24,14 +25,14 @@ RSpec.describe Clock::Api, type: :controller do
     end
     context "A clock" do
       before do
-        @clocks = [{name: "r2d2", time: "long long time ago", count: 10}]
-        Database.all_clocks = @clocks
+        clock = {name: "r2d2", time: "long long time ago", count: 10}
+        database.store_clock(clock)
       end
       it "returns the faked time" do
-        post_clock("r2d2", {time: "long long time ago", count: 1})
+        post_clock("r2d2", {'time' => "long long time ago", 'count' => 1})
         get "/clocks/r2d2"
         expect(last_response.status).to eq(200)
-        expect(last_response.body).to eq("long long time ago")
+        expect(last_response.body).to eq("{\"time\":\"long long time ago\"}")
       end
     end
   end
@@ -39,6 +40,7 @@ RSpec.describe Clock::Api, type: :controller do
     context "with time" do
       it "returns 200" do
         post_clock("peak", {"time" => "peak", 'count' => 2})
+        expect(last_response.status).to eq(200)
       end
     end
   end
