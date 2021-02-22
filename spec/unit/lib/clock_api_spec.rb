@@ -1,13 +1,12 @@
-require_relative '../../../lib/clock_api'
 require 'rack/test'
-RSpec.describe ClockApi do
+RSpec.describe Clock::Api do
   include Rack::Test::Methods
   let(:db_record) { Clock::RecordResult }
 
-  let(:controller) { instance_double(Clock::ClockController) }
+  let(:controller) { instance_double(Clock::Controller) }
 
   def app
-    ClockApi.new(controller)
+    described_class.new(controller)
   end
 
   def response_body
@@ -15,11 +14,12 @@ RSpec.describe ClockApi do
   end
 
   describe 'GET /clocks/:name' do
+    let(:object) {OpenStruct.new(time: "food time")}
     context 'when clock exists' do
       before do
         allow(controller).to receive(:find)
           .with(name: "percy")
-          .and_return(db_record.new(true, 56, nil, Clock::Clock.new("food time")))
+          .and_return(db_record.new(true, 56, nil, object))
       end
       it 'returns the expense records as JSON' do
         get '/clocks/percy'
@@ -30,9 +30,16 @@ RSpec.describe ClockApi do
         expect(last_response.status).to eq(200)
       end
     end
-    context 'when there are no expenses on the given date' do
-      it 'returns an empty array as JSON'
-      it 'responds with a 200 (OK)'
+    context 'when there is an error' do
+      before do
+        allow(controller).to receive(:find)
+          .with(name: "percy")
+          .and_return(db_record.new(false, nil, "an error", nil))
+      end
+      it 'responds with a 500 (Internal Server Error)' do
+        get '/clocks/percy'
+        expect(last_response.status).to eq(500)
+      end
     end
   end
 
@@ -42,7 +49,7 @@ RSpec.describe ClockApi do
       it 'returns 200 and clock id' do
         allow(controller).to receive(:record)
           .with(params)
-          .and_return(db_record.new(true, 56, nil))
+          .and_return(db_record.new(true, 56, nil, nil))
 
         post '/clocks/leek', JSON.generate(params)
 
@@ -55,12 +62,11 @@ RSpec.describe ClockApi do
       it 'returns 422 and error message' do
         allow(controller).to receive(:record)
           .with(params)
-          .and_return(db_record.new(false, 0, 'Incorrect count'))
+          .and_return(db_record.new(false, 0, 'Incorrect count', nil))
 
         post '/clocks/leek', JSON.generate(params)
 
         expect(last_response.status).to eq(422)
-        expect(JSON.parse(last_response.body).keys).to include('error')
       end
     end
   end

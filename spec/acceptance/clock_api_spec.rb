@@ -2,10 +2,10 @@ require 'rack/test'
 require 'spec_helper'
 require 'json'
 
-RSpec.describe ClockApi, type: :controller do
+RSpec.describe Clock::Api, type: :controller do
   include Rack::Test::Methods
   def app
-    ClockApi
+    Clock::Box.new.api
   end
 
   def post_clock(name, params)
@@ -25,10 +25,9 @@ RSpec.describe ClockApi, type: :controller do
     context "A clock" do
       before do
         @clocks = [{name: "r2d2", time: "long long time ago", count: 10}]
-        $db = @clocks
+        Database.all_clocks = @clocks
       end
       it "returns the faked time" do
-        pending "need to add a db"
         post_clock("r2d2", {time: "long long time ago", count: 1})
         get "/clocks/r2d2"
         expect(last_response.status).to eq(200)
